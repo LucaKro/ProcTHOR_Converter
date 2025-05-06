@@ -1,11 +1,29 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import re
 import json
 from typing import Dict, Any, List
 import numpy
 from scipy.spatial.transform import Rotation
+
+current_dir = os.path.dirname(__file__)
+src_dir = os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'src'))
+sys.path.insert(0, src_dir)
+
+os.environ["PATH"] = os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'ext', 'blender'))
+if os.name == 'nt':
+    usd_dir = os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'windows', 'lib', 'python'))
+    os.environ["PATH"] += f";{os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'windows', 'bin'))}"
+    os.environ["PATH"] += f";{os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'windows', 'lib'))}"
+    os.environ["PATH"] += f";{os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'windows', 'plugin', 'usd'))}"
+else:
+    usd_dir = os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'linux', 'lib', 'python'))
+    os.environ["PATH"] += f":{os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'linux', 'lib'))}"
+    os.environ["PATH"] += f":{os.path.abspath(os.path.join(current_dir, 'Multiverse-Parser', 'USD', 'linux', 'plugin', 'usd'))}"
+sys.path.insert(0, usd_dir)
+
 from multiverse_parser import Configuration, Factory
 from multiverse_parser import (WorldBuilder,
                                BodyBuilder,
