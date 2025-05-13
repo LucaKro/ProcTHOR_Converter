@@ -276,12 +276,7 @@ class ProcthorImporter(Factory):
                                          face_vertex_counts=face_vertex_counts,
                                          face_vertex_indices=face_vertex_indices,
                                          mesh_file_name=mesh_file_name)
-            geom_property = GeomProperty(geom_type=GeomType.MESH,
-                                         is_visible=True,
-                                         is_collidable=True)
-            geom_builder = body_builder.add_geom(geom_name=f"{body_name}",
-                                                 geom_property=geom_property)
-            geom_builder.add_mesh(mesh_name=f"SM_{body_name}", mesh_property=mesh_property)
+            self.build_geom(body_builder, body_name, mesh_property)
 
         else:
             door = walls_with_door[wall["id"]]
@@ -349,12 +344,7 @@ class ProcthorImporter(Factory):
                                              face_vertex_counts=face_vertex_counts,
                                              face_vertex_indices=face_vertex_indices,
                                              mesh_file_name=mesh_file_name)
-                geom_property = GeomProperty(geom_type=GeomType.MESH,
-                                             is_visible=True,
-                                             is_collidable=True)
-                geom_builder = body_builder.add_geom(geom_name=f"{body_name}_{idx}",
-                                                     geom_property=geom_property)
-                geom_builder.add_mesh(mesh_name=f"SM_{body_name}_{idx}", mesh_property=mesh_property)
+                self.build_geom(body_builder, f"{body_name}_{idx}", mesh_property)
 
     def import_door(self, door: Dict[str, Any], door_id: int, walls: List[Dict[str, Any]],
                     walls_with_door: Dict) -> None:
@@ -436,12 +426,7 @@ class ProcthorImporter(Factory):
                 mesh_path = mesh_prim.GetPath()
                 mesh_property = MeshProperty.from_mesh_file_path(mesh_file_path=tmp_usd_mesh_file_path,
                                                                  mesh_path=mesh_path)
-                geom_property = GeomProperty(geom_type=GeomType.MESH,
-                                             is_visible=True,
-                                             is_collidable=True)
-                geom_builder = body_builder.add_geom(geom_name=f"SM_{body_name}_{asset_name}",
-                                                     geom_property=geom_property)
-                geom_builder.add_mesh(mesh_name=mesh_name, mesh_property=mesh_property)
+                self.build_geom(body_builder, f"{body_name}_{asset_name}", mesh_property)
         else:
             if "Chair" in asset_name:
                 print(asset_name)
@@ -455,17 +440,28 @@ class ProcthorImporter(Factory):
                             mesh_file_path=asset_path, merge_mesh=True)
                         mesh_stage = Usd.Stage.Open(tmp_usd_mesh_file_path)
                         for mesh_prim in [prim for prim in mesh_stage.Traverse() if prim.IsA(UsdGeom.Mesh)]:
-                            mesh_name = mesh_prim.GetName()
                             mesh_path = mesh_prim.GetPath()
                             mesh_property = MeshProperty.from_mesh_file_path(mesh_file_path=tmp_usd_mesh_file_path,
                                                                              mesh_path=mesh_path)
-                            geom_property = GeomProperty(geom_type=GeomType.MESH,
-                                                         is_visible=True,
-                                                         is_collidable=True)
-                            geom_builder = body_builder.add_geom(geom_name=f"SM_{body_name}_{asset_name}_{mesh_idx}",
-                                                                 geom_property=geom_property)
-                            geom_builder.add_mesh(mesh_name=mesh_name, mesh_property=mesh_property)
+                            self.build_geom(body_builder, f"{body_name}_{asset_name}_{mesh_idx}", mesh_property)
                             mesh_idx += 1
+
+    def build_geom(self, body_builder, body_name, mesh_property) -> None:
+        geom_property = GeomProperty(geom_type=GeomType.MESH,
+                                     is_visible=True,
+                                     is_collidable=False)
+        geom_builder = body_builder.add_geom(geom_name=f"{body_name}_visual",
+                                                geom_property=geom_property)
+        geom_builder.add_mesh(mesh_name=f"SM_{body_name}", mesh_property=mesh_property)
+        geom_builder.build()
+
+        geom_property = GeomProperty(geom_type=GeomType.MESH,
+                                     is_visible=False,
+                                     is_collidable=True)
+        geom_builder = body_builder.add_geom(geom_name=f"{body_name}_collision",
+                                                geom_property=geom_property)
+        geom_builder.add_mesh(mesh_name=f"SM_{body_name}", mesh_property=mesh_property)
+        geom_builder.build()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Auto semantic tagging based on object names")
